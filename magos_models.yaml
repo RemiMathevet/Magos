@@ -1,0 +1,35 @@
+# Configuration des modèles MAGOS.
+# Chaque clé est l'alias court utilisé par le client (champ "model" du POST /jobs)
+# et exposé par GET /models pour le dropdown du hub.
+#
+# `path`  : chemin absolu du .gguf (premier shard pour les modèles splittés).
+# `flags` : liste des arguments supplémentaires passés à llama-server.
+#           Magos ajoute systématiquement `-m <path> --host 0.0.0.0 --port <MAGOS_LLAMA_PORT>`.
+
+Qwen3.6-35B:
+  path: /media/SSDsamsung/models/Qwen_Qwen3.6-35B-A3B-Q4_K_M.gguf
+  flags: ["-ngl", "99", "--jinja", "--parallel", "1", "--reasoning", "on", "-c", "16384"]
+
+Qwen3.5-35B:
+  path: /media/SSDsamsung/models/Qwen_Qwen3.5-35B-A3B-Q4_K_M.gguf
+  flags: ["-ngl", "99", "--jinja"]
+
+Qwen3.5-122B:
+  path: /media/SSDsamsung/models/Qwen_Qwen3.5-122B-A10B-Q4_K_M/Qwen_Qwen3.5-122B-A10B-Q4_K_M-00001-of-00002.gguf
+  flags: ["-ngl", "999", "-cmoe", "-fa", "on", "--reasoning", "on", "-c", "32768", "--jinja"]
+
+Gemma-31B:
+  path: /media/SSDsamsung/models/google_gemma-4-31B-it-Q4_K_M.gguf
+  flags: ["-ngl", "99"]
+
+Qwen3.5-9B:
+  path: /media/SSDsamsung/models/Qwen_Qwen3.5-9B-Q8_0.gguf
+  flags: ["-ngl", "99", "--jinja"]
+
+Qwen3.6-27B:
+  path: /media/SSDsamsung/models/Qwen3.6-27B-Q4_K_M.gguf
+  flags: ["-ngl", "99", "--jinja", "--parallel", "1"]
+
+Ministral-3B:
+  path: /media/SSDsamsung/models/mistralai_Ministral-3-3B-Instruct-2512-Q4_K_M.gguf
+  flags: ["-ngl", "99", "--jinja"]

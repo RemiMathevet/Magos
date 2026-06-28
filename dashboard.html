@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚙ MAGOS Cogitator</title>
+<style>
+  :root {
+    --bg: #0a0606;
+    --bg-card: #1a0e0a;
+    --bg-elev: #221310;
+    --border: #3d2418;
+    --border-bright: #5d3826;
+    --primary: #c84a16;
+    --primary-dim: #8a3010;
+    --accent: #e8a04a;
+    --success: #4a8a3a;
+    --warning: #d4a017;
+    --danger: #8b1a1a;
+    --info: #2a8aa4;
+    --text: #d4c5a9;
+    --text-dim: #8a7660;
+    --text-mute: #5a4a40;
+    --running-glow: 0 0 20px rgba(42, 138, 164, 0.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', 'Roboto Mono', Consolas, monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  body {
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(200, 74, 22, 0.04) 0%, transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(200, 74, 22, 0.04) 0%, transparent 40%);
+  }
+
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+
+  /* ─── HEADER ─────────────────────────────────────────────── */
+  header {
+    border: 1px solid var(--border);
+    background: linear-gradient(180deg, var(--bg-card), var(--bg));
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    position: relative;
+    clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+  }
+  header::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--primary), transparent);
+  }
+  .title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    color: var(--primary);
+    text-transform: uppercase;
+  }
+  h1 .cog { display: inline-block; animation: spin 8s linear infinite; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .subtitle {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .status-pills {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .pill-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 6px currentColor;
+    color: var(--success);
+  }
+  .pill-dot.down { background: var(--danger); color: var(--danger); }
+  .pill-dot.warn { background: var(--warning); color: var(--warning); }
+
+  /* ─── STATS ──────────────────────────────────────────────── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+    position: relative;
+  }
+  .stat-card::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: var(--primary-dim);
+  }
+  .stat-label {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+  .stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-top: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-value.small { font-size: 14px; line-height: 1.2; padding-top: 8px; }
+
+  /* ─── SECTIONS ───────────────────────────────────────────── */
+  section { margin-bottom: 28px; }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-title h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: var(--primary);
+  }
+  .section-title .count {
+    font-size: 11px;
+    color: var(--text-dim);
+    background: var(--bg-elev);
+    padding: 2px 8px;
+    border: 1px solid var(--border);
+  }
+  .section-title .symbol { color: var(--accent); }
+  .section-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+  /* ─── JOB CARDS ──────────────────────────────────────────── */
+  .job-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .job-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 12px 16px;
+    display: grid;
+    grid-template-columns: auto 1fr auto auto auto;
+    gap: 16px;
+    align-items: center;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .job-card:hover {
+    border-color: var(--border-bright);
+    background: var(--bg-elev);
+  }
+
+  .job-card.running {
+    border-color: var(--info);
+    background: linear-gradient(90deg, rgba(42, 138, 164, 0.08), var(--bg-card) 30%);
+    box-shadow: var(--running-glow);
+  }
+  .job-card.done { border-left: 3px solid var(--success); }
+  .job-card.failed { border-left: 3px solid var(--danger); }
+  .job-card.cancelled { border-left: 3px solid var(--text-mute); }
+  .job-card.queued { border-left: 3px solid var(--warning); }
+
+  .job-uuid {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+  .job-model {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .job-meta {
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .job-meta span { white-space: nowrap; }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: 1px solid;
+  }
+  .badge-prio { color: var(--accent); border-color: var(--accent); }
+  .badge-status-done { color: var(--success); border-color: var(--success); }
+  .badge-status-failed { color: var(--danger); border-color: var(--danger); }
+  .badge-status-cancelled { color: var(--text-mute); border-color: var(--text-mute); }
+  .badge-status-running { color: var(--info); border-color: var(--info); }
+  .badge-status-queued { color: var(--warning); border-color: var(--warning); }
+
+  .job-duration {
+    font-size: 12px;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    min-width: 80px;
+  }
+  .job-tokens {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-align: right;
+  }
+
+  .running-pulse {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--info);
+    margin-right: 6px;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(42, 138, 164, 0.7); }
+    50% { opacity: 0.6; box-shadow: 0 0 0 8px rgba(42, 138, 164, 0); }
+  }
+
+  /* ─── BOUTONS ────────────────────────────────────────────── */
+  .btn {
+    background: var(--bg-elev);
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    padding: 6px 14px;
+    font-family: inherit;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .btn:hover {
+    background: var(--primary-dim);
+    border-color: var(--primary);
+    color: var(--accent);
+  }
+  .btn-danger:hover {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: white;
+  }
+  .btn-ghost {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--text-dim);
+  }
+  .btn-icon { padding: 4px 8px; font-size: 13px; }
+
+  .empty {
+    text-align: center;
+    padding: 32px 16px;
+    color: var(--text-mute);
+    font-size: 12px;
+    border: 1px dashed var(--border);
+    background: rgba(0,0,0,0.2);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  /* ─── MODALE ─────────────────────────────────────────────── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 24px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg-card);
+    border: 1px solid var(--border-bright);
+    width: 100%;
+    max-width: 1100px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  }
+  .modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .modal-title {
+    font-size: 13px;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .live-badge {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    background: rgba(42, 138, 164, 0.15);
+    border: 1px solid var(--info);
+    color: var(--info);
+    font-size: 10px;
+    letter-spacing: 2px;
+  }
+  .live-badge.active { display: inline-flex; }
+  .live-badge .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--info);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  .modal-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 11px;
+    color: var(--text-dim);
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+  .modal-meta span { white-space: nowrap; }
+
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .tab {
+    padding: 10px 20px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-dim);
+    font-family: inherit;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--primary);
+    background: var(--bg-card);
+  }
+  .tab-indicator {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--info);
+    margin-left: 6px;
+    animation: pulse 1.5s ease-in-out infinite;
+    vertical-align: middle;
+  }
+
+  .modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+  }
+  .modal-content-block {
+    display: none;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 13px;
+    color: var(--text);
+    background: var(--bg);
+    padding: 16px;
+    border: 1px solid var(--border);
+    max-height: 60vh;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+  }
+  .modal-content-block.active { display: block; }
+  .modal-content-block.empty-content {
+    color: var(--text-mute);
+    font-style: italic;
+    text-align: center;
+    padding: 40px;
+  }
+  .modal-content-block.streaming {
+    border-color: var(--info);
+    box-shadow: inset 0 0 30px rgba(42, 138, 164, 0.05);
+  }
+  .modal-content-block.streaming::after {
+    content: "▊";
+    color: var(--info);
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+
+  .modal-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .modal-footer-left {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 10px;
+    color: var(--text-mute);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .modal-footer-right { display: flex; gap: 8px; }
+
+  .refresh-indicator {
+    font-size: 10px;
+    color: var(--text-mute);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .refresh-indicator.active { color: var(--info); }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--primary-dim); }
+
+  @media (max-width: 768px) {
+    .container { padding: 12px; }
+    .job-card { grid-template-columns: 1fr; gap: 8px; }
+    .job-duration, .job-tokens { text-align: left; }
+    h1 { font-size: 18px; letter-spacing: 2px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <header>
+    <div class="title-row">
+      <div>
+        <h1><span class="cog">⚙</span> MAGOS COGITATOR</h1>
+        <div class="subtitle">Machine-Adept Gateway for LLM Servitors // v0.5</div>
+      </div>
+      <div class="status-pills">
+        <span class="pill"><span class="pill-dot" id="dot-magos"></span> Magos</span>
+        <span class="pill"><span class="pill-dot" id="dot-llm"></span> <span id="pill-llm-text">llama.cpp</span></span>
+        <span class="pill" id="pill-queue">▣ Queue: <span id="queue-count">—</span></span>
+      </div>
+    </div>
+  </header>
+
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-label">Total jobs</div><div class="stat-value" id="stat-total">—</div></div>
+    <div class="stat-card"><div class="stat-label">Done</div><div class="stat-value" id="stat-done" style="color:var(--success)">—</div></div>
+    <div class="stat-card"><div class="stat-label">Failed</div><div class="stat-value" id="stat-failed" style="color:var(--danger)">—</div></div>
+    <div class="stat-card"><div class="stat-label">Cancelled</div><div class="stat-value" id="stat-cancelled" style="color:var(--text-mute)">—</div></div>
+    <div class="stat-card"><div class="stat-label">Modèle préféré</div><div class="stat-value small" id="stat-top-model">—</div></div>
+  </div>
+
+  <section>
+    <div class="section-title">
+      <span class="symbol">⚙</span>
+      <h2>Modèles enregistrés</h2>
+      <span class="count" id="models-count">—</span>
+    </div>
+    <div id="models-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px"></div>
+  </section>
+
+  <section>
+    <div class="section-title">
+      <span class="symbol">▣</span>
+      <h2>En cours</h2>
+      <span class="count" id="running-count">0</span>
+      <div class="section-actions">
+        <button class="btn btn-ghost btn-icon" id="refresh-toggle" title="Pause/reprise auto-refresh">⏸</button>
+        <span class="refresh-indicator active" id="refresh-indicator">Auto 2s</span>
+      </div>
+    </div>
+    <div class="job-list" id="running-list">
+      <div class="empty">Aucun job en cours</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-title">
+      <span class="symbol">▣</span>
+      <h2>En attente</h2>
+      <span class="count" id="queued-count">0</span>
+    </div>
+    <div class="job-list" id="queued-list">
+      <div class="empty">Queue vide</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-title">
+      <span class="symbol">▣</span>
+      <h2>Historique récent</h2>
+      <span class="count" id="history-count">0</span>
+    </div>
+    <div class="job-list" id="history-list">
+      <div class="empty">Aucun job terminé</div>
+    </div>
+  </section>
+
+</div>
+
+<!-- MODALE DE DÉTAIL JOB -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div style="flex: 1; min-width: 0;">
+        <div class="modal-title">
+          <span id="modal-title-text">Job</span>
+          <span class="live-badge" id="modal-live-badge">
+            <span class="dot"></span> LIVE
+          </span>
+        </div>
+        <div class="modal-meta" id="modal-meta"></div>
+      </div>
+      <button class="btn btn-icon" onclick="closeModal()">✕</button>
+    </div>
+    <div class="tabs">
+      <button class="tab active" data-tab="prompt">Prompt</button>
+      <button class="tab" data-tab="thinking">Thinking <span id="tab-thinking-live"></span></button>
+      <button class="tab" data-tab="response">Réponse <span id="tab-response-live"></span></button>
+      <button class="tab" data-tab="metadata">Métadonnées</button>
+    </div>
+    <div class="modal-body">
+      <pre class="modal-content-block active" id="content-prompt"></pre>
+      <pre class="modal-content-block" id="content-thinking"></pre>
+      <pre class="modal-content-block" id="content-response"></pre>
+      <pre class="modal-content-block" id="content-metadata"></pre>
+    </div>
+    <div class="modal-footer">
+      <div class="modal-footer-left" id="modal-footer-left"></div>
+      <div class="modal-footer-right">
+        <button class="btn btn-danger" id="modal-cancel-btn" style="display:none">⊘ Annuler le job</button>
+        <button class="btn" id="modal-download-btn">⬇ Télécharger .txt</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const REFRESH_MS = 2000;
+  const LIVE_REFRESH_MS = 2000;  // poll modale en mode live
+  const HISTORY_LIMIT = 30;
+  const SCROLL_BOTTOM_THRESHOLD = 80;  // px de tolérance pour considérer "en bas"
+  const API = '';
+
+  let refreshTimer = null;
+  let refreshActive = true;
+  let currentModalUuid = null;
+  let modalLiveTimer = null;
+  let modalIsLive = false;
+
+  // ─── HELPERS ────────────────────────────────────────────────
+  function fmtDuration(s) {
+    if (s == null) return '—';
+    s = Math.round(s);
+    if (s < 60) return s + 's';
+    if (s < 3600) return Math.floor(s/60) + 'm ' + (s%60) + 's';
+    return Math.floor(s/3600) + 'h ' + Math.floor((s%3600)/60) + 'm';
+  }
+  function fmtRelative(iso) {
+    if (!iso) return '—';
+    const date = new Date(iso);
+    const diff = (Date.now() - date.getTime()) / 1000;
+    if (diff < 60) return 'il y a ' + Math.floor(diff) + 's';
+    if (diff < 3600) return 'il y a ' + Math.floor(diff/60) + 'm';
+    if (diff < 86400) return 'il y a ' + Math.floor(diff/3600) + 'h';
+    return date.toLocaleDateString('fr-FR') + ' ' + date.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+  }
+  function fmtElapsed(startedIso) {
+    if (!startedIso) return '—';
+    const elapsed = (Date.now() - new Date(startedIso).getTime()) / 1000;
+    return fmtDuration(elapsed);
+  }
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+  }
+  function isScrolledToBottom(el) {
+    return (el.scrollHeight - el.scrollTop - el.clientHeight) < SCROLL_BOTTOM_THRESHOLD;
+  }
+  async function api(path, opts={}) {
+    const r = await fetch(API + path, opts);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  }
+
+  // ─── REFRESH GLOBAL ─────────────────────────────────────────
+  async function refresh() {
+    try {
+      const [health, queue, stats, history, models] = await Promise.all([
+        api('/health'),
+        api('/queue'),
+        api('/stats'),
+        api('/jobs?limit=' + HISTORY_LIMIT + '&exclude_active=true'),
+        api('/models'),
+      ]);
+      renderStatus(health, models);
+      renderStats(stats);
+      renderRunning(queue.running || []);
+      renderQueued(queue.queued || []);
+      renderHistory(history);
+      renderModels(models);
+    } catch (e) {
+      console.error('Refresh failed:', e);
+      document.getElementById('dot-magos').classList.add('down');
+    }
+  }
+
+  function renderStatus(h, models) {
+    document.getElementById('dot-magos').classList.remove('down', 'warn');
+    const current = models && models.current;
+    document.getElementById('dot-llm').classList.toggle('down', !current);
+    document.getElementById('pill-llm-text').textContent = current
+      ? 'llama.cpp · ' + current
+      : 'llama.cpp · idle';
+    document.getElementById('queue-count').textContent = h.queued + ' / ' + h.running + ' actif';
+  }
+
+  function renderModels(m) {
+    const list = (m && m.models) || [];
+    document.getElementById('models-count').textContent = list.length;
+    const container = document.getElementById('models-list');
+    container.innerHTML = list.map(mod => {
+      const color = mod.loaded ? 'var(--success)' : 'var(--text-mute)';
+      const bg = mod.loaded ? 'rgba(0,255,128,0.1)' : 'transparent';
+      const tag = mod.loaded ? ' · chargé' : '';
+      return '<span class="pill" style="border-color:' + color + ';background:' + bg + '">'
+        + '<span class="pill-dot" style="background:' + color + '"></span>'
+        + escapeHtml(mod.name) + tag + '</span>';
+    }).join('') || '<span style="color:var(--text-mute)">(aucun modèle dans magos_models.yaml)</span>';
+  }
+
+  function renderStats(s) {
+    document.getElementById('stat-total').textContent = s.total_jobs || 0;
+    document.getElementById('stat-done').textContent = (s.by_status && s.by_status.done) || 0;
+    document.getElementById('stat-failed').textContent = (s.by_status && s.by_status.failed) || 0;
+    document.getElementById('stat-cancelled').textContent = (s.by_status && s.by_status.cancelled) || 0;
+    if (s.by_model && s.by_model.length > 0) {
+      const top = s.by_model.sort((a,b) => b.n - a.n)[0];
+      const avg = top.avg_dur ? fmtDuration(top.avg_dur) : '—';
+      document.getElementById('stat-top-model').innerHTML =
+        '<div style="color:var(--accent)">' + escapeHtml(top.model) + '</div>' +
+        '<div style="font-size:11px;color:var(--text-dim);margin-top:4px">' +
+        top.n + ' runs · ⌀ ' + avg + '</div>';
+    } else {
+      document.getElementById('stat-top-model').textContent = '—';
+    }
+  }
+
+  function jobCard(j, opts={}) {
+    const showPosition = opts.position != null;
+    const isRunning = j.status === 'running';
+    const isQueued = j.status === 'queued';
+    const isDone = j.status === 'done';
+
+    const pulse = isRunning ? '<span class="running-pulse"></span>' : '';
+    const positionLabel = showPosition ? '<span style="color:var(--text-dim);font-size:11px">#' + opts.position + '</span>' : '';
+
+    let durationHtml;
+    if (isRunning) {
+      durationHtml = '<div class="job-duration">' + pulse + 'depuis ' + fmtElapsed(j.started_at) + '</div>';
+    } else if (isQueued) {
+      durationHtml = '<div class="job-duration" style="color:var(--text-dim)">en attente</div>';
+    } else {
+      durationHtml = '<div class="job-duration">' + fmtDuration(j.duration_s) + '</div>';
+    }
+
+    const tokensHtml = (isDone || j.status === 'failed')
+      ? '<div class="job-tokens">' + (j.tokens_out || '—') + ' tok</div>'
+      : '<div class="job-tokens">—</div>';
+
+    const cancelBtn = (isRunning || isQueued)
+      ? `<button class="btn btn-danger btn-icon" onclick="event.stopPropagation();cancelJob('${j.uuid}')" title="Annuler">⊘</button>`
+      : (isDone ? `<a class="btn btn-icon" href="/jobs/${j.uuid}/file" target="_blank" onclick="event.stopPropagation()" title="Télécharger .txt">⬇</a>` : '');
+
+    return `
+      <div class="job-card ${j.status}" onclick="openJob('${j.uuid}')">
+        <div class="job-uuid">${positionLabel} ${j.uuid}</div>
+        <div>
+          <div class="job-model">${escapeHtml(j.model)}</div>
+          <div class="job-meta">
+            <span>${fmtRelative(j.created_at)}</span>
+            <span class="badge badge-prio">P${j.priority}</span>
+            <span class="badge badge-status-${j.status}">${j.status}</span>
+            ${j.error ? '<span style="color:var(--danger)">⚠ ' + escapeHtml(j.error.slice(0,60)) + '</span>' : ''}
+          </div>
+        </div>
+        <div></div>
+        ${durationHtml}${tokensHtml}
+        <div>${cancelBtn}</div>
+      </div>
+    `;
+  }
+
+  function renderRunning(list) {
+    const el = document.getElementById('running-list');
+    document.getElementById('running-count').textContent = list.length;
+    el.innerHTML = list.length === 0
+      ? '<div class="empty">Aucun job en cours</div>'
+      : list.map(j => jobCard(j)).join('');
+  }
+  function renderQueued(list) {
+    const el = document.getElementById('queued-list');
+    document.getElementById('queued-count').textContent = list.length;
+    el.innerHTML = list.length === 0
+      ? '<div class="empty">Queue vide</div>'
+      : list.map((j, i) => jobCard(j, {position: i+1})).join('');
+  }
+  function renderHistory(list) {
+    const el = document.getElementById('history-list');
+    document.getElementById('history-count').textContent = list.length;
+    el.innerHTML = list.length === 0
+      ? '<div class="empty">Aucun job terminé</div>'
+      : list.map(j => jobCard(j)).join('');
+  }
+
+  // ─── MODALE ─────────────────────────────────────────────────
+
+  /** Met à jour un bloc de contenu en préservant le scroll si l'utilisateur
+   *  n'est pas en bas, et en suivant automatiquement sinon (auto-scroll terminal). */
+  function updateContentBlock(id, newContent, label) {
+    const el = document.getElementById(id);
+    const wasAtBottom = isScrolledToBottom(el);
+
+    if (!newContent || newContent.trim() === '') {
+      el.classList.add('empty-content');
+      el.textContent = '(vide — pas de ' + label + ')';
+      return;
+    }
+    el.classList.remove('empty-content');
+
+    // Ne re-render que si le contenu a changé (évite reflow inutile)
+    if (el.textContent !== newContent) {
+      el.textContent = newContent;
+      if (wasAtBottom) {
+        // Auto-scroll vers le bas comme un terminal
+        el.scrollTop = el.scrollHeight;
+      }
+    }
+  }
+
+  function renderModalMeta(j) {
+    const meta = [];
+    meta.push('<span class="badge badge-status-' + j.status + '">' + j.status + '</span>');
+    meta.push('<span class="badge badge-prio">P' + j.priority + '</span>');
+    if (j.status === 'running' && j.started_at) {
+      meta.push('⏱ depuis ' + fmtElapsed(j.started_at));
+    } else if (j.duration_s) {
+      meta.push('⏱ ' + fmtDuration(j.duration_s));
+    }
+    if (j.tokens_in) meta.push('↓ ' + j.tokens_in + ' tok');
+    if (j.tokens_out) meta.push('↑ ' + j.tokens_out + ' tok');
+    meta.push('📅 ' + fmtRelative(j.created_at));
+    if (j.error) meta.push('<span style="color:var(--danger)">⚠ ' + escapeHtml(j.error) + '</span>');
+    document.getElementById('modal-meta').innerHTML = meta.join(' · ');
+  }
+
+  function renderModalContent(j) {
+    updateContentBlock('content-prompt', j.prompt, 'prompt');
+
+    const isRunning = j.status === 'running';
+    const thinkingPlaceholder = isRunning ? '(en attente du premier snapshot…)' : 'thinking';
+    const responsePlaceholder = isRunning ? '(en attente du premier snapshot…)' : 'réponse';
+
+    updateContentBlock('content-thinking', j.thinking, thinkingPlaceholder);
+    updateContentBlock('content-response', j.response, responsePlaceholder);
+
+    // Indicateur de streaming sur les blocs en cours
+    const thinkingEl = document.getElementById('content-thinking');
+    const responseEl = document.getElementById('content-response');
+    thinkingEl.classList.toggle('streaming', isRunning && !!j.thinking);
+    responseEl.classList.toggle('streaming', isRunning && !!j.response);
+
+    // Indicateurs sur les onglets
+    document.getElementById('tab-thinking-live').innerHTML =
+      (isRunning && j.thinking) ? '<span class="tab-indicator"></span>' : '';
+    document.getElementById('tab-response-live').innerHTML =
+      (isRunning && j.response) ? '<span class="tab-indicator"></span>' : '';
+
+    // Métadonnées
+    const metaJson = {
+      uuid: j.uuid, status: j.status, model: j.model, priority: j.priority,
+      created_at: j.created_at, started_at: j.started_at, ended_at: j.ended_at,
+      duration_s: j.duration_s, tokens_in: j.tokens_in, tokens_out: j.tokens_out,
+      output_file: j.output_file, error: j.error,
+    };
+    updateContentBlock('content-metadata', JSON.stringify(metaJson, null, 2), 'metadata');
+  }
+
+  async function openJob(uuid) {
+    currentModalUuid = uuid;
+
+    try {
+      const j = await api('/jobs/' + uuid + '?include_content=true');
+
+      document.getElementById('modal-title-text').innerHTML =
+        'Job ' + uuid + ' · <span style="color:var(--accent)">' + escapeHtml(j.model) + '</span>';
+
+      renderModalMeta(j);
+      renderModalContent(j);
+
+      // Footer
+      document.getElementById('modal-download-btn').onclick = () => {
+        window.open('/jobs/' + uuid + '/file', '_blank');
+      };
+      const cancelBtn = document.getElementById('modal-cancel-btn');
+      if (j.status === 'running' || j.status === 'queued') {
+        cancelBtn.style.display = 'inline-block';
+        cancelBtn.onclick = () => cancelJob(uuid, true);
+      } else {
+        cancelBtn.style.display = 'none';
+      }
+
+      document.getElementById('modal-overlay').classList.add('open');
+
+      // Si job en cours → activer live polling
+      if (j.status === 'running') {
+        startLivePolling(uuid);
+      } else {
+        stopLivePolling();
+      }
+    } catch (e) {
+      alert('Erreur récupération job : ' + e.message);
+    }
+  }
+
+  function startLivePolling(uuid) {
+    stopLivePolling();
+    modalIsLive = true;
+    document.getElementById('modal-live-badge').classList.add('active');
+    document.getElementById('modal-footer-left').textContent =
+      '◉ Live preview · refresh ' + (LIVE_REFRESH_MS/1000) + 's';
+
+    modalLiveTimer = setInterval(async () => {
+      if (currentModalUuid !== uuid) { stopLivePolling(); return; }
+      try {
+        const j = await api('/jobs/' + uuid + '?include_content=true');
+        renderModalMeta(j);
+        renderModalContent(j);
+
+        // Si le job vient de terminer, on stoppe le live
+        if (j.status !== 'running') {
+          stopLivePolling();
+          // Cache le bouton annuler maintenant que c'est fini
+          document.getElementById('modal-cancel-btn').style.display = 'none';
+          document.getElementById('modal-footer-left').innerHTML =
+            '<span style="color:var(--success)">✓ Job terminé (' + j.status + ')</span>';
+        }
+      } catch (e) {
+        console.error('Live poll failed:', e);
+      }
+    }, LIVE_REFRESH_MS);
+  }
+
+  function stopLivePolling() {
+    if (modalLiveTimer) {
+      clearInterval(modalLiveTimer);
+      modalLiveTimer = null;
+    }
+    modalIsLive = false;
+    document.getElementById('modal-live-badge').classList.remove('active');
+    document.getElementById('content-thinking').classList.remove('streaming');
+    document.getElementById('content-response').classList.remove('streaming');
+    document.getElementById('tab-thinking-live').innerHTML = '';
+    document.getElementById('tab-response-live').innerHTML = '';
+    if (!modalLiveTimer) {
+      document.getElementById('modal-footer-left').textContent = '';
+    }
+  }
+
+  function closeModal() {
+    stopLivePolling();
+    document.getElementById('modal-overlay').classList.remove('open');
+    currentModalUuid = null;
+  }
+
+  function switchTab(name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    document.querySelectorAll('.modal-content-block').forEach(b => b.classList.remove('active'));
+    const target = document.getElementById('content-' + name);
+    target.classList.add('active');
+    // Si on ouvre un onglet en cours de streaming, scroll en bas immédiatement
+    if (target.classList.contains('streaming')) {
+      requestAnimationFrame(() => { target.scrollTop = target.scrollHeight; });
+    }
+  }
+
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => switchTab(t.dataset.tab));
+  });
+
+  document.getElementById('modal-overlay').addEventListener('click', (e) => {
+    if (e.target.id === 'modal-overlay') closeModal();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // ─── ACTIONS ────────────────────────────────────────────────
+  async function cancelJob(uuid, fromModal=false) {
+    if (!confirm('Annuler le job ' + uuid + ' ?')) return;
+    try {
+      await api('/jobs/' + uuid, {method: 'DELETE'});
+      if (fromModal) closeModal();
+      refresh();
+    } catch (e) {
+      alert('Erreur annulation : ' + e.message);
+    }
+  }
+
+  // ─── REFRESH CONTROL ────────────────────────────────────────
+  function startRefresh() {
+    if (refreshTimer) clearInterval(refreshTimer);
+    refreshTimer = setInterval(() => {
+      // Pause refresh global pendant que la modale est ouverte (le live timer s'en charge)
+      if (refreshActive && !currentModalUuid) refresh();
+    }, REFRESH_MS);
+  }
+
+  function pauseRefresh() {
+    refreshActive = false;
+    document.getElementById('refresh-toggle').textContent = '▶';
+    document.getElementById('refresh-indicator').classList.remove('active');
+    document.getElementById('refresh-indicator').textContent = 'Pause';
+  }
+
+  function resumeRefresh() {
+    refreshActive = true;
+    document.getElementById('refresh-toggle').textContent = '⏸';
+    document.getElementById('refresh-indicator').classList.add('active');
+    document.getElementById('refresh-indicator').textContent = 'Auto 2s';
+    refresh();
+  }
+
+  document.getElementById('refresh-toggle').addEventListener('click', () => {
+    if (refreshActive) pauseRefresh(); else resumeRefresh();
+  });
+
+  // ─── INIT ───────────────────────────────────────────────────
+  refresh();
+  startRefresh();
+</script>
+
+</body>
+</html>
